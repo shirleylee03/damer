@@ -1,0 +1,27 @@
+<?xml version="1.0" ?>
+<property-set xmlns="http://mcc.lip6.fr/">
+    <property>
+        <id>test</id>
+        <description>Automatically generated</description>
+        <formula>
+            <all-paths>
+                <globally>
+                    <disjunction>
+                        <equality>
+                            <token-value>
+                                <name>P14</name>
+                            </token-value>
+                            <int-constant>1</int-constant>
+                        </equality>
+                        <equality>
+                            <token-value>
+                                <name>P14</name>
+                            </token-value>
+                            <int-constant>0</int-constant>
+                        </equality>
+                    </disjunction>
+                </globally>
+            </all-paths>
+        </formula>
+    </property>
+</property-set>

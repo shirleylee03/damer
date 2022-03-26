@@ -1,0 +1,82 @@
+void reach_error(){}
+void abort(){}
+
+
+
+
+
+
+
+
+ extern void abort(void);
+void reach_error(){}
+void __VERIFIER_assert(int cond) { if (!(cond)) {  {reach_error();abort();} } return; }
+
+
+
+
+
+
+void exit(int code){
+  return ;
+}
+
+
+
+
+
+
+int myglobal;
+pthread_mutex_t mymutex = PTHREAD_MUTEX_INITIALIZER;
+
+void *thread_function_mutex(void *arg)
+{int i,j;
+    
+    { i=0;
+while( i<20){
+    {
+        pthread_mutex_lock(&mymutex);
+        j=myglobal;
+        j=j+1;
+        printf("\nIn thread_function_mutex..\t");
+
+        myglobal=j;
+        pthread_mutex_unlock(&mymutex);
+    }
+ i++ ;}}
+    return 0;
+}
+
+int main(void)
+{pthread_t mythread;int i;
+    
+    
+
+    printf("\n\t\t---------------------------------------------------------------------------");
+    printf("\n\t\t Centre for Development of Advanced Computing (C-DAC)");
+    printf("\n\t\t Email : hpcfte@cdac.in");
+    printf("\n\t\t---------------------------------------------------------------------------");
+
+    myglobal = 0;
+
+    if ( pthread_create( &mythread, 0, thread_function_mutex, 0) )
+    {
+      exit(-1);
+    }
+    { i=0;
+while( i<20){
+    {
+        pthread_mutex_lock(&mymutex);
+        myglobal=myglobal+1;
+        pthread_mutex_unlock(&mymutex);
+    }
+ i++;}}
+
+    if ( pthread_join ( mythread, 0 ) )
+    {
+      exit(-1);
+    }
+
+    __VERIFIER_assert(myglobal == 40);
+    exit(0);
+}

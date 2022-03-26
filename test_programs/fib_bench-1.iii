@@ -1,0 +1,74 @@
+void reach_error(){}
+void abort(){}
+
+
+
+
+
+
+
+extern void abort(void);
+void reach_error(){}
+
+
+
+
+
+
+
+int i=1, j=1;
+
+
+
+void *
+t1(void* arg)
+{int k = 0;
+  
+
+  {k = 0;
+while( k < 5){ {
+    
+    i=i+j;
+    
+  }
+ k++;}}
+  pthread_exit(0);
+}
+
+void *
+t2(void* arg)
+{int k = 0;
+  
+
+  {k = 0;
+while( k < 5){ {
+    
+    j=j+i;
+    
+  }
+ k++;}}
+  pthread_exit(0);
+}
+
+int
+main(int argc, char **argv)
+{pthread_t id1, id2;int condI ;int condJ ;
+  
+
+  pthread_create(&id1, 0, t1, 0);
+  pthread_create(&id2, 0, t2, 0);
+
+  
+   condI = i > 144;
+  
+
+  
+   condJ = j > 144;
+  
+
+  if (condI || condJ) {
+     {reach_error();abort();}
+  }
+
+  return 0;
+}
