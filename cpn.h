@@ -32,7 +32,7 @@ typedef unsigned int index_t;
 typedef unsigned short VARID;
 typedef unsigned int NUM_t;
 typedef unsigned int ID_t;
-typedef string TID_t;
+typedef string TID_t;// tid thread identifier
 
 
 

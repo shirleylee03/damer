@@ -30,7 +30,7 @@ struct Bucket{
     String_t str;
     Product_t pro;
 
-    size_t hash();
+    size_t hash(); // hash table
     bool operator==(const Bucket &bkt);
     bool operator==(const Integer_t &val){
         if(tid == Integer && val == integer)

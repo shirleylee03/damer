@@ -43,7 +43,7 @@ public:
 class AST_change
 {
 public:
-    Mapping m;
+    Mapping m;//map
     vector<pair<int, int>> modify, add, del, move;
 };
 

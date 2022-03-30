@@ -21,7 +21,7 @@ string change_add_single(CPN *cpn,AST_change &change,pair<int,int> add){
         newFirstStatementNode = newFirstStatementNode->child;
     gtree *add_node = get_statementNodeFromPos(newFirstStatementNode,new_pos - 1);//函数输入的pos以0开始
 
-    ///chang AST
+    ///change AST
     if(add_pos != 0) {
         gtree *new_statementlistNode = new gtree;
         gtree *pre_level_first_node = pre_node->parent->child;

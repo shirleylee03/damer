@@ -371,7 +371,7 @@ bool MultiSet::MINUS(const MultiSet &ms) {
     }
     return true;
 }
-
+// multisets
 bool MultiSet::PLUS(const MultiSet &ms) {
     if(tid != ms.tid || (tid == productsort && sid != ms.sid)){
         throw "error! MultiSet >= type doesn't match!";

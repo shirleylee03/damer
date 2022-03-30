@@ -161,9 +161,9 @@ public:
     void Tarjan(CPN_Product *pnode);
 
     void printresult(string propertyid);
-    bool isLabel(RG_NODE *state, int sj);  //判断能否合成交状态
-    int judgeF(string s);         //判断该公式是否为F类型的公式
-    short int sumtoken(string s, RG_NODE *state);   //计算s中所有库所的token和
+    bool isLabel(RG_NODE *state, int sj);  //Judge whether the cross state can be synthesized
+    int judgeF(string s);         //Judge whether the formula is of type F
+    short int sumtoken(string s, RG_NODE *state);   //Calculate the token sum of all libraries in S
     bool handleLTLF(string s, RG_NODE *state);
     bool handleLTLC(string s, RG_NODE *state);
     bool handleLTLV(string s, RG_NODE *state);

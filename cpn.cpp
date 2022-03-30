@@ -21,7 +21,7 @@ map<string,bool> place_isglobal;//first is place,second is isglobal. isglobal an
 int gen_P_num=0,gen_T_num=0;
 ID_t id_ptr = 1000;
 
-const TID_t init_tid = "\'main\'";
+const TID_t init_tid = "\'main\'"; // initial function
 const TID_t pthread_P = "pthread";
 type TID_colorset = String;
 

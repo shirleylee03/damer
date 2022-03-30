@@ -7,7 +7,7 @@
 
 
 #include "cpn.h"
-#define CPNRGTABLE_SIZE 100000
+#define CPNRGTABLE_SIZE 100000 // max
 class Marking;
 class Binding;
 void Marking_after_fire(Marking &marking,CTransition *transition,Binding *bindings,CPN *cpn);

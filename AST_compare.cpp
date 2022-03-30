@@ -114,9 +114,9 @@ bool theSame(gtree *t1, gtree *t2)
 
 
 /*
-top-down算法
-输入：两棵语法树
-输出：两棵语法树的Map集
+top-down algorithm
+input：two ast
+output：two ast Map
 */
 
 void top_down(gtree *t1, gtree *t2, vector<Mapping> &M)
@@ -219,7 +219,7 @@ gtree *extract_theOther_in_M(gtree *t, vector<Mapping> M)
         else if (M[i].map2 == t)
             return M[i].map1;
     }
-    cout << "M中没有当前指针，请检查是否exist_in_M！" << endl;
+    cout << "There is no index, check exist_in_M!" << endl;
     exit(1);
 }
 
@@ -244,7 +244,7 @@ gtree *extract_theOther_in_M(gtree *t, vector<Mapping> M)
 
 gtree *get_statementNodeFromPos(gtree *firstStatement,int pos){
     if(pos<0){
-        cerr << "pos不能为负数!"<<endl;
+        cerr << "pos can not be non-negative number!"<<endl;
         exit(-1);
     }
     auto tmp = firstStatement;
@@ -253,7 +253,7 @@ gtree *get_statementNodeFromPos(gtree *firstStatement,int pos){
     }
     if(tmp->type == STATEMENT)
         return tmp;
-    cerr << "pos超出范围!"<<endl;
+    cerr << "pos out of range!"<<endl;
     exit(-1);
 }
 
@@ -281,7 +281,7 @@ vector<Mapping> find_container_mapping(vector<Mapping> &M)//找到所有包含�
                     result_list.push_back(m);
             }
             else {
-                cerr << "匹配的STATEMENT节点应当在COMPOUND_STATEMENT节点的子树中." <<endl;
+                cerr << "matched STATEMENT node is not in the subtree of rooted by node COMPOUND_STATEMENT." <<endl;
                 exit(-1);
             }
         }
@@ -490,7 +490,7 @@ void process_other(vector<pair<int, int>> moves, vector<pair<int, int>> list, ve
 }
 
 map<int, int> get_position_pair(gtree *t1,gtree *t2,vector<Mapping> &M){
-    //找到语句块的position_pair数列
+    //find the statement block of position_pair series
     map<int, int> position_pair_map;
 
     gtree *p1 = t1, *p2 = t2;
@@ -532,7 +532,7 @@ AST_change block_handle(gtree *t1, gtree *t2, vector<Mapping> &M_statement)//t1,
     changes.m.map2 = t2;
 
 
-    //先判断是否所有子句都已match（若都match则已经不需要处理该语句块）
+    //First judge whether all clauses have been matched (if all clauses have been matched, the statement block does not need to be processed)
     bool match = total_match(t1, t2, M_statement);
     if (match == true)
     {
@@ -540,7 +540,7 @@ AST_change block_handle(gtree *t1, gtree *t2, vector<Mapping> &M_statement)//t1,
         changes.m.map2 = NULL;
         return changes;
     }
-    //找到语句块的position_pair数列
+    //Find the statement block of position_pair seris
     vector<pair<int, int>> position_pair_list;
     position_pair_list.push_back(make_pair(0, 0));//(0,0)作为阶梯起点
 
@@ -576,14 +576,14 @@ AST_change block_handle(gtree *t1, gtree *t2, vector<Mapping> &M_statement)//t1,
 
     position_pair_list.emplace_back(position1-1,position2-1);
 
-    //根据position_pair_list先找到移动的pair
+    //according to position_pair_list and find pair
     vector<pair<int, int>> moves = process_move(position_pair_list);
 
     vector<pair<int, int>> modify, add, del;
     process_other(moves, position_pair_list, modify, add, del, position1, position2);
 
     if(t1->parent->parent->type != FUNCTION_DEFINITION) {
-        ///函数不用进M_statement集合
+        ///function does not go to M_statement set
         auto tmp_t1 = t1, tmp_t2 = t2;
         while (tmp_t1->type != STATEMENT)
             tmp_t1 = tmp_t1->parent;
@@ -603,7 +603,7 @@ AST_change block_handle(gtree *t1, gtree *t2, vector<Mapping> &M_statement)//t1,
     return changes;
 }
 
-void sort_M(vector<Mapping> &M)//冒泡算法
+void sort_M(vector<Mapping> &M)//Bubbling algorithm
 {
     for (unsigned int i = 0; i < M.size() - 1; i++)
         for (unsigned int j = 0; j < M.size() - i - 1; j++)
@@ -629,14 +629,14 @@ void sort_M(vector<Mapping> &M)//冒泡算法
 
 
 /*
- * 通过匹配节点集合M找到匹配语句节点集合M_statement
+ * Find the matching statement node set through the matching node set M M_statement
  */
 
 void get_MatchStatement(gtree *t1,gtree *t2,vector<Mapping> &M_statement){
     if(!t1 || !t2)
         return;
     if(t1->type != t2->type){
-        cerr << "AST_compare Match的节点出现type不一致!"<<endl;
+        cerr << "AST_compare Match: The node type of is inconsistent!"<<endl;
         exit(-1);
     }
     if(t1->type == STATEMENT && t2->type == STATEMENT){
@@ -659,9 +659,9 @@ vector<Mapping> get_MatchStatement(vector<Mapping> &M){
 }
 
 /*
-extract_change函数
-输入：两棵语法树、Top-down算法的输出map集
-输出：所有语句列内语句级别的改动
+extract_change function
+input：Two ast Top-down algorithm out map set
+output：Statement level changes in all statement columns
 
 */
 vector<AST_change> extract_change(gtree *t1, gtree *t2, vector<Mapping> &M, vector<Mapping> &M_statement)
@@ -669,7 +669,7 @@ vector<AST_change> extract_change(gtree *t1, gtree *t2, vector<Mapping> &M, vect
     vector<AST_change> changes;
 
     vector<Mapping> container_list = find_container_mapping(M);
-    //排序所有的container，保证按逆先序进行处理，可避免子语句已处理完后，祖先语句重复处理
+    //sort all container: ensure that the processing is carried out in reverse order, which can avoid repeated processing of ancestor statements after the sub statements have been processed
     sort_M(container_list);
     if (container_list.size() != 0)
     {
@@ -681,7 +681,7 @@ vector<AST_change> extract_change(gtree *t1, gtree *t2, vector<Mapping> &M, vect
             while(c2 && c2->type != STATEMENT_LIST)
                 c2 = c2->next;
             if(!c1 || !c2){
-                cerr << "提取了错误的container!"<<endl;
+                cerr << "Extract error container!"<<endl;
                 exit(-1);
             }
             AST_change change = block_handle(c1, c2, M_statement);
@@ -692,7 +692,7 @@ vector<AST_change> extract_change(gtree *t1, gtree *t2, vector<Mapping> &M, vect
     }
     else
     {
-        cout << "找不到container!" << endl;
+        cout << "Can not find container!" << endl;
         exit(1);
     }
 }
@@ -749,16 +749,16 @@ void extract_moveNodesFromContainer(Mapping &m,vector<Mapping> &M_statement,vect
 }
 
 /*
- * extract_changeNodes提取两颗语法树多出的部分
- * @M_statement: Match的语句节点
- * @M: Match的节点(只包含极大节点)
- * @vec_t1: 删去的节点
- * @vec_t2: 增加的节点
+ * extract_changeNodes: Extract the extra parts of the two syntax trees
+ * @M_statement: Match statement nodes
+ * @M: Matched nodes(Contains only maximal nodes)
+ * @vec_t1: deleted nodes
+ * @vec_t2: added nodes
  */
 
 void extract_changeNodes(vector<Mapping> &M_statement,vector<Mapping> &M,vector<gtree *> &vec_t1,vector<gtree *> &vec_t2){
     vector<Mapping> container_list = find_container_mapping(M);
-    //排序所有的container，保证按逆先序进行处理，可避免子语句已处理完后，祖先语句重复处理
+    //Sort all container: Ensure that the processing is carried out in reverse order to avoid repeated processing of ancestor statements after the sub statements have been processed
     sort_M(container_list);
     if (container_list.size() != 0)
     {
@@ -770,7 +770,7 @@ void extract_changeNodes(vector<Mapping> &M_statement,vector<Mapping> &M,vector<
     }
     else
     {
-        cout << "找不到container!" << endl;
+        cout << "Can not find container!" << endl;
         exit(1);
     }
 }

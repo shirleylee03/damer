@@ -13,7 +13,7 @@ index_t CHashtable::hashfunction(CPN_Product *node) {
     Prohashvalue = Prohashvalue & size;
     return Prohashvalue;
 }
-
+// hast table
 CPN_Product *CHashtable::search(CPN_Product *node) {
     index_t idx = hashfunction(node);
     CPN_Product *p = table[idx];

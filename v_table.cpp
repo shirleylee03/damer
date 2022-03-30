@@ -226,7 +226,7 @@ string V_Table::get_basetag(std::string v) {
             else
                 temp_fa = temp_fa->fa;
         }
-        throw "can't find variable_basetag " + v;
+        throw "can't find variable_basetag " + v; //can't find
     }
 }
 

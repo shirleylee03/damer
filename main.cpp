@@ -3,7 +3,7 @@
 
 int main(int argc,char **argv) {
 
-    cmdlinet cmd;
+    cmdlinet cmd; // try open cmd
     cmd.parse(argc,argv);
     cmd.doit();
 

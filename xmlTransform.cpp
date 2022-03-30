@@ -15,7 +15,7 @@ TiXmlElement* statementTransform(TiXmlElement *statementNode, CPN *cpn, const Ro
     row = rowMap.find(row)->second;//row转换
     cpn->getRowRelatedPT(row,Ps,Ts);
     if(Ts.size() == 0)
-        throw "statement property没有找到相应的变迁!";
+        throw "statement property No corresponding changes were found!";
     TiXmlElement *newNode = new TiXmlElement("is-fireable");
     TiXmlElement *newTNode = new TiXmlElement("transition");
     newNode->LinkEndChild(newTNode);

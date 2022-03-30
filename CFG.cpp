@@ -369,20 +369,18 @@ static void handle_pthread_join(CFG &cfg_, vector<string> args, CFGNode *node_) 
     cfg_.pthreads[i]->join = node_;
 }
 
-// 链接主线程和其他线程
+// main thread
 static void linkPthread(CFG &cfg_) {
     static const int IDENTIFIER = 258;
 
     for (auto node: cfg_.nodes) {
-        // 线程的创建和终止，在目前都是BASIC类型，这个条件更新
-        // 线程的创建和终止，不一定是BASIC，有可能是其它，通过查找pthread create关键字确定
         // if (node->type!=CFGNode::BASIC)
         //     continue;
         if (node->sentence.find("pthread_create") == string::npos &&
             node->sentence.find("pthread_join") == string::npos)
             continue;
 
-        // 找到参数，args中第一个应该是pthread
+        //
         vector<string> args;
         stack<const TreeNode *> s;
         if (node->type == CFGNode::BASIC) // 如果不是基本类型，那么搜索范围限制在条件括号内
@@ -401,11 +399,11 @@ static void linkPthread(CFG &cfg_) {
         }
         if (args.size()>3)
             args.erase(args.begin());
-        // 执行至此，检查args里面的第一个元素，不是create和join的要忽略
+        //
         if (args.empty() || (args.back() != "pthread_create" && args.back() != "pthread_join"))
             continue;
 
-        // args里面的参数是逆序的（由于搜索树的形状是逆序宽搜）
+        // args
         if (args.back() == "pthread_create") {
             handle_pthread_create(cfg_, args, node);
         }
@@ -416,11 +414,6 @@ static void linkPthread(CFG &cfg_) {
 }
 
 int preProcessor_pthread(CFG& cfg_) {
-    /**
-     * 线程相关的预处理：
-     * 1-找到所有线程的定义
-     * 2-确定所有线程的起点位置和终点位置，CFGNode* 形式
-     */
 
     // 1
     findDeclarationOfPthread(cfg_);
@@ -432,15 +425,11 @@ int preProcessor_pthread(CFG& cfg_) {
 
 }
 
-/**
- * 遍历叶子节点获得当前节点的语句
- * 需要增加空格
- */
 void CFGNode::getSentence() {
-    this->sentence.clear();         // 初始清空
+    this->sentence.clear();         //
 
     if (this->type == SELECTION) {
-        // 分为if型(包含switch但是其余部分未处理switch)和if-else型
+        // if or if-else
         if (this->tree_node->children.front()->children.size() == 5) {
             this->sentence = "if ( ";
             this->sentence += getLeaves(this->tree_node->children.front()->children[2]);
@@ -454,27 +443,27 @@ void CFGNode::getSentence() {
         return;
     }
     if (this->type == ITERATION) {
-        // 只考虑while型的循环，其余不予考虑，使用预处理转换
+        //
         this->sentence = "while ( ";
         this->sentence += getLeaves(this->tree_node->children.front()->children[2]);
         this->sentence += " ) {XXX} ";
         return;
     }
     if (this->type == FUNCTION) {
-        // 不要把函数的运行代码加入
+        //
         this->sentence = "";
         for (auto node: this->tree_node->children)
             if (node->nodeName!="compound_statement")
                 this->sentence+= getLeaves(node);
         return;
     }
-//    已经被拆分为左右大括号，直接取leaves即可
+//
 //    if (this->type == COMPOUND){
 //        this->sentence = "{ }";
 //        return;
 //    }
 
-    // 其余情况
+    //
     this->sentence = getLeaves(this->tree_node);
 
     static int cnt = 0;
@@ -483,24 +472,24 @@ void CFGNode::getSentence() {
     }
 }
 
-// 输入一个树的根结点，返回其叶子的字符串string形式
+//
 std::string CFGNode::getLeaves(const TreeNode *r_) {
     if (r_->children.empty()) {
-        return r_->nodeName + ' ';                    // 叶子节点
+        return r_->nodeName + ' ';                    //
     }
 
     std::string ret;
     for (auto child: r_->children)
-        ret += getLeaves(child);                 // 非叶子节点则递归其叶子
+        ret += getLeaves(child);                 //
     return ret;
 }
 
-// 输入一棵子树，返回其参数列表（标识符）。该函数为调取函数参数变量专用
+//
 std::vector<std::string> CFGNode::getArguments(const TreeNode *r_){
     vector<string> ret;
-    // 函数执行机制为深搜找到每一个
+    // dfs
     static const int IDENTIFIER = 258;
-    // 深搜找每一个IDENTIFIER
+    // IDENTIFIER
     stack<const TreeNode *> s;
     s.push(r_);
     while (!s.empty()) {
@@ -518,20 +507,20 @@ std::vector<std::string> CFGNode::getArguments(const TreeNode *r_){
     return ret;
 }
 
-// 虚析构，释放所有CFG节点的空间
+// release
 CFG::~CFG() {
     for (auto node: this->nodes)
         delete node;
 }
 
 /***********************************************************************
-              数据依赖部分
+              dfd
 ***********************************************************************/
 
-// 调试输出，数据依赖情况
+// output
 static void print_DD(const CFG&cfg_) {
     printf("======================================\n");
-    printf("==============数据依赖情况==============\n");
+    printf("==============data dependence==============\n");
     for (auto node: cfg_.nodes) {
         if (node->type == CFGNode::COMPOUND)
             continue;
@@ -555,30 +544,25 @@ static void print_DD(const CFG&cfg_) {
     return;
 }
 
-/**
- * 查找某个CFG节点的某个变量的数据依赖，递归方式
- * @param cur_node_ 当前查找到的节点
- * @param v_ 变量的字符串形式
- */
 void CFGNode::findDataDependence(CFGNode *const cur_node_, const string &v_){
     if (this->vis.count(cur_node_) || cur_node_ == this)
-        return;                         // 重复访问则无视
+        return;                         //
     else
-        this->vis.insert(cur_node_);    // 没有访问过则继续访问
+        this->vis.insert(cur_node_);    //
 
     if (cur_node_->type==CFGNode::DECLARATION
         && std::find(cur_node_->writeVs.begin(), cur_node_->writeVs.end(), v_) != cur_node_->writeVs.end()) {
-        // 变量的定义部分，可以不用继续往前查找
+        //
         this->dataDependence.emplace_back(cur_node_);
         return;
     }
     if (std::find(cur_node_->writeVs.begin(), cur_node_->writeVs.end(), v_) != cur_node_->writeVs.end()) {
-        // 找到对变量的写入，也不需要继续查找
+        //
         this->dataDependence.emplace_back(cur_node_);
         return;
     }
 
-    // 都没有，继续前向遍历
+    //
     for (auto node: cur_node_->preNodes) {
         this->findDataDependence(node, v_);
     }
@@ -586,17 +570,17 @@ void CFGNode::findDataDependence(CFGNode *const cur_node_, const string &v_){
     return;
 }
 
-/* 会导致参数内容修改的函数列表 */
+
 std::vector<std::string> function_changeArg = {
     "strcpy"
 };
 
 void CFGNode::extractIdentifier() {
-    // 提取所有变量标识符，并将其分类完成：读、写
+    //
     static const int IDENTIFIER = 258;
     static const int INC_OP = 263;
     static const int DEC_OP = 264;
-    // 深搜属于这个语句的语法树，找到赋值符，以及前后自增自减
+    //
     stack<const TreeNode *> s;
     s.push(this->tree_node);
     while (!s.empty()) {
@@ -604,48 +588,46 @@ void CFGNode::extractIdentifier() {
         s.pop();
 
         if (node->nodeName == "selection_statement" || node->nodeName == "iteration_statement") {
-            // 选择和循环语句只需要将其条件加入即可
+            // selection loop
             s.push(node->children[2]);
             continue;
         }
         if (node->nodeName == "assignment_expression" && node->children.size()!=1 ) { // 防止条件表达式进入这个判断
-            // 赋值表达式
+            // assignment
             this->writeVs.emplace_back(getLeaves(node->children.front()));
             s.push(node->children.back());
             continue;
         }
         if (node->nodeName == "unary_expression"
             && (node->children.front()->type == INC_OP || node->children.front()->type == DEC_OP)) {
-            // 前置  ++  --
+            // ++  --
             this->writeVs.emplace_back(getLeaves(node->children.back()));
             this->readVs.emplace_back(getLeaves(node->children.back()));
             continue;
         }
         if (node->nodeName == "postfix_expression"
             && (node->children.back()->type == INC_OP || node->children.back()->type == DEC_OP)) {
-            // 后置  ++ --
+            //  ++ --
             this->writeVs.emplace_back(getLeaves(node->children.front()));
             this->readVs.emplace_back(getLeaves(node->children.front()));
             continue;
         }
         if (node->type == IDENTIFIER && node->parent->nodeName == "direct_declarator") {
-            // 变量定义
+            //
             this->writeVs.emplace_back(getLeaves(node));
             continue;
         }
         if (node->type == IDENTIFIER) {
-            // 普通变量
+            //
             this->readVs.emplace_back(getLeaves(node));
             continue;
         }
         if (node->nodeName=="postfix_expression" && node->children.back()->nodeName == ")" 
             && node->children.size() == 4 ) {
-            // 赋值表达式
-            // 检测函数调用专用判定（带有参数的函数）
-            // 提取函数名
+
             string function_name = getLeaves(node->children.front());
-            function_name.pop_back(); // 最后一个字符为空格，删除
-            // 提取参数
+            function_name.pop_back(); //
+            // extract parameter
             vector<string> args = getArguments(node->children[2]);
 
             bool write = false;
@@ -657,9 +639,6 @@ void CFGNode::extractIdentifier() {
                     this->writeVs.emplace_back(arg + ' ');
                 }
             // continue;
-            // 此处不需要continue
-            // 原因：在确定了函数可能修改变量之后，只增加写属性，未增加读属性，仍需继续
-            // 向下搜索以确定该函数内部可能嵌套其它表达式，对变量的写操作
         }
         for (auto child: node->children)
             if (child)
@@ -668,7 +647,7 @@ void CFGNode::extractIdentifier() {
 
 }
 
-// 在变量的使用处添加指向其声明处的数据依赖
+// data dependence
 static void linkUsage2Declaration(CFGNode *node, const string &v_) {
     queue<CFGNode *> q;
     q.push(node);
@@ -676,17 +655,17 @@ static void linkUsage2Declaration(CFGNode *node, const string &v_) {
     while (!q.empty()) {
         if (std::find(q.front()->readVs.begin(), q.front()->readVs.end(), v_) != q.front()->readVs.end()
             || std::find(q.front()->writeVs.begin(), q.front()->writeVs.end(), v_) != q.front()->writeVs.end()) {
-            // 该结点找到了对所声明的变量的使用
+            //
             if (std::find(q.front()->dataDependence.begin(), q.front()->dataDependence.end(), node)
                     ==q.front()->dataDependence.end())
-                // 数据依赖中没有存在声明节点
+                //
                 q.front()->dataDependence.emplace_back(node);
             else
-                // 已经存在声明节点
+                //
                 ;
         }
 
-        // 没根据next继续搜索
+        //
         for (int i = 0; i < 2; i++) {
             if (q.front()->next[i] && node->vis.find(q.front()->next[i])==node->vis.end()) {
                 q.push(q.front()->next[i]);
@@ -699,12 +678,6 @@ static void linkUsage2Declaration(CFGNode *node, const string &v_) {
 }
 
 void buildDataDependence(CFG &cfg_){
-    /**
-     * 数据依赖构建流程如下：
-     * 1-提取所有变量（分节点）
-     * 2-查找每个读变量的数据依赖点，指针形式
-     * 3-对于变量的声明，总是成为其后续使用的数据依赖
-     */
 
     //  1
     for (auto node:cfg_.nodes)
@@ -714,7 +687,7 @@ void buildDataDependence(CFG &cfg_){
     //  2
     for (auto node:cfg_.nodes) {
         for (auto v:node->readVs) {
-            node->vis.clear(); // 清空查找路径
+            node->vis.clear(); // clear paths
             for (auto pre_node: node->preNodes)
                 node->findDataDependence(pre_node, v);
         }
@@ -728,15 +701,14 @@ void buildDataDependence(CFG &cfg_){
         }
     }
 
-//    print_DD(cfg_); // debug输出
+//    print_DD(cfg_); // debug
 }
 
 
 /***********************************************************************
-              控制依赖部分
+              cfd
 ***********************************************************************/
 
-// 调试输出，控制依赖情况
 static void print_CD(const CFG&cfg_) {
     printf("======================================\n");
     printf("==============控制依赖情况==============\n");
@@ -764,17 +736,12 @@ static void print_CD(const CFG&cfg_) {
 }
 
 
-// 删除测试
+//
 static void testByDelete(CFGNode *node, CFGNode* test_node) {
-    /**
-     *    删除test_node节点，之后以node为起点进行搜索，如果不能找到END节点，说
-     * 明test_node就是后必经节点
-     *    该算法时间复杂度较高(宽搜)
-     */
 
-    queue<const CFGNode *> q;   // 宽搜队列
-//    set<const CFGNode *> vis; // 用于记录哪些节点已经访问过
-    node->vis.clear();          // 用于记录哪些节点已经访问过
+    queue<const CFGNode *> q;   //
+//    set<const CFGNode *> vis; //
+    node->vis.clear();          //
     q.push(node);
     node->vis.insert(node);
     while (!q.empty()) {
@@ -797,11 +764,9 @@ static void testByDelete(CFGNode *node, CFGNode* test_node) {
     node->postDominatedBy.emplace_back(test_node);                          // 如果不能找到末尾
 }
 
-// 找到一个节点的后支配树父亲节点（指针），从后必经节点中查找
+// After finding the parent node (the parent node in the tree), you must find a parent node
 static void findPDTreeParent(CFGNode *node) {
-    /**
-     * 宽搜方式确定后必经节点中最近的一个
-     */
+
     node->vis.clear();
     queue<const CFGNode*> q;
     q.push(node);
@@ -820,19 +785,15 @@ static void findPDTreeParent(CFGNode *node) {
     }
 }
 
-// 构建后支配树，后支配树的每条边存在于postDominateBy中
+// construct Post dominance tree
 static void buildPostDominateTree(CFG &cfg_) {
-    /**
-     * 1-以尝试删除的方式测试某个节点是不是选定节点的后必经节点
-     * 2-从后必经节点中找到最接近的（后支配树父亲节点）
-     */
     // 1
     for (auto node: cfg_.nodes) {
 //        if (node->type == CFGNode::EMPTY)
 //            continue;
         for (auto test_node: cfg_.nodes) {
             if (test_node == node || test_node->sentence == "START NODE")
-                // 删除的时候需要考虑终止节点，否则最后终止节点不能作为后支配树的根结点
+                //
                 continue;
             testByDelete(node, test_node);
         }
@@ -843,15 +804,8 @@ static void buildPostDominateTree(CFG &cfg_) {
     }
 }
 
-/**
- * 判断a是否后支配b
- * 算法：计算a是否是后支配树中b的祖先
- * @param a
- * @param b
- * @return
- */
 static bool isPostDominated(const CFGNode*a, const CFGNode *b) {
-    if (!b->PDTreeParent) // 如果b已经是树根，那么树根是不会被任何节点后支配的
+    if (!b->PDTreeParent) //
         return false;
 
     while (b) {
@@ -859,10 +813,10 @@ static bool isPostDominated(const CFGNode*a, const CFGNode *b) {
             return true;
         b = b->PDTreeParent;
     }
-    return false; // 遍历到树的根的根结点，还没有找到a，说明a不是b的祖先节点
+    return false; //
 }
 
-// 递归找路径，cur为当前找到的节点，b为目标节点，cur path为当前已经走过的路径，找到目标之后将cur path加入paths
+//
 static void findPaths(const CFGNode *cur, const CFGNode *b, vector<const CFGNode *> &cur_path,
                       vector<vector<const CFGNode *>> &paths) {
     if (cur == b) {
@@ -878,12 +832,11 @@ static void findPaths(const CFGNode *cur, const CFGNode *b, vector<const CFGNode
         }
 }
 
-// 获取从节点a到节点b的所有路径
+// Get all paths from node a to node B
 static void getAllPaths(const CFGNode *a, const CFGNode *b, vector<vector<const CFGNode*>> &paths) {
     /**
-     * 采用递归方式进行搜索
+     * Search recursively
      */
-
 //    printf("%s->%s\n", a->sentence.c_str(), b->sentence.c_str());
     vector<const CFGNode*> cur_path;
     for (int i=0;i<2;i++)
@@ -894,15 +847,9 @@ static void getAllPaths(const CFGNode *a, const CFGNode *b, vector<vector<const 
         }
 }
 
-// 根据后支配树计算控制依赖
+// Calculate the control dependency according to the post dominance tree
 static void calcControlDependenceByPDTree(CFG &cfg_) {
-    /**
-     * 控制依赖根据定义确定，对于任意两个节点m、n，要说n控制依赖于m [ m---(cd)--->n ]，应满足
-     * 1、存在一条从m到n的路径，并且路径上任意不属于m、n的节点都是被n后支配的
-     * 2、m不是被n后支配的
-     * wei shen me yao xian ji suan 1 ne ? ni zhi dao ma ?
-     * 另外，后支配：在后支配树中a是b的祖先，那么就说a后支配b
-     */
+
     for (auto m: cfg_.nodes)
         for (auto n: cfg_.nodes){
             if (m == n)
@@ -910,13 +857,13 @@ static void calcControlDependenceByPDTree(CFG &cfg_) {
             bool cd = true;
             vector<vector<const CFGNode*>> paths;
             getAllPaths(m, n, paths);
-            // 至此，找到所有路径paths，路径数量为paths.size()，注意路径上不包含m，n节点
+            //
             if (paths.empty()) {
                 cd = false;
-                // 不存在路径，条件不满足，一定不存在控制依赖关系
+                // there is no dependence
                 continue;
             }
-            // 接下来首先检查路径上的节点是否被n后支配
+            // Post domination
             for (const auto &path: paths) {
                 cd = true;
                 for (auto node: path) {
@@ -925,17 +872,17 @@ static void calcControlDependenceByPDTree(CFG &cfg_) {
                         break;
                     }
                 }
-                if (cd)                             // 找到了一条合法的路径，可以不用继续搜索了
+                if (cd)                             // find a path
                     break;
-                if (!cd && path == paths.back())    // 搜索完成所有路径，未能找到合法路径，判断不存在
+                if (!cd && path == paths.back())    // After searching all paths, the legal path cannot be found, and it is judged that it does not exist
                     cd = false;
             }
 
-            // 接下来考虑第二个条件，m不能是被n后支配的
+            // Next, consider the second condition, m cannot be dominated by n
             if (isPostDominated(n, m))
                 cd = false;
 
-            // 两个条件结束，开始写入控制依赖关系
+            // The two conditions end and the control dependency is written
             if (cd)
 //                n->controlDependOn = m;
                 n->controlDependOn.emplace_back(m);
@@ -943,9 +890,9 @@ static void calcControlDependenceByPDTree(CFG &cfg_) {
         }
 }
 
-// 补全控制依赖，所有必须会执行的点依赖于入口节点
-// while语句的后必经语句，都要控制依赖于while（考虑死循环）
-// 函数节点控制依赖于调用点
+// Complete the control dependency. All points that must be executed depend on the entry node
+// The following mandatory statements of while statements should be controlled and depend on while (considering dead loop)
+// Function node control depends on the call point
 static void completeCD(CFG& cfg_) {
     for (auto node:cfg_.nodes) {
         if (node->controlDependOn.empty()) {
@@ -956,7 +903,7 @@ static void completeCD(CFG& cfg_) {
             const TreeNode *fun_node = node->tree_node;
             while (fun_node && fun_node->nodeName!="function_definition")
                 fun_node= fun_node->parent;
-            if (!fun_node) // 这种情况对应的是全局变量的定义
+            if (!fun_node) // This situation corresponds to the definition of global variables
                 continue;
             CFGNode *tmp = getCFGNodeByTreeNode(fun_node, cfg_);
 //            node->controlDependOn = tmp;
@@ -964,33 +911,24 @@ static void completeCD(CFG& cfg_) {
         }
         if (node->type==CFGNode::ITERATION) {
 //            node->next[1]->controlDependOn.emplace_back(node);
-            // 更新：while语句的后必经语句，都要控制依赖于while
+            // Update: the necessary statements after the while statement must be controlled and depend on the while statement
             for (auto hbj: node->postDominatedBy)
                 hbj->controlDependOn.emplace_back(node);
         }
         if(node->type==CFGNode::FUNCTION) {
             extern string findFunctionName(TreeNode *fun);
             string function_name = findFunctionName(node->tree_node);
-            // 所有调用点
+            // all call site
             for (auto n: cfg_.nodes)
                 if (n->sentence.find(function_name) != string::npos
                     && n->sentence.find("pthread_create") == string::npos)
-                    // 能找到其函数名并且不为线程创建的点，就是其调用点
+                    // The point whose function name can be found and not created for the thread is its call point
                     node->controlDependOn.emplace_back(n);
         }
     }
 }
 
 void buildControlDependence(CFG &cfg_) {
-    /**
-     * 构建控制依赖的步骤如下：
-     * 1-构建后支配树
-     * 2-根据后支配树计算控制依赖
-     * 3-补充控制依赖，所有一定会执行的点依赖于开始节点START
-     *   更新：所有一定会执行的点依赖于其函数入口
-     *   添加：所有while节点的下一个语句一定控制依赖于while本身（考虑死循环）
-     *   添加：函数节点控制依赖于调用点
-     */
 
     // 1
     buildPostDominateTree(cfg_);
@@ -1007,13 +945,13 @@ void buildControlDependence(CFG &cfg_) {
 
 
 /***********************************************************************
-              切片运行部分
+              slicing
 ***********************************************************************/
 
 // 调试输出切片，简单观察
 static void print_PS(const CFG &cfg_) {
     printf("======================================\n");
-    printf("==============切片运行情况==============\n");
+    printf("==============Slicing execution==============\n");
 
     for (auto node:cfg_.nodes)
         if (node->keep)
@@ -1022,7 +960,7 @@ static void print_PS(const CFG &cfg_) {
     printf("======================================\n");
 }
 
-// 保存单句，传入参数应该就是一个Statement
+// When saving a single sentence, the passed in parameter should be a statement
 static void keepState(TreeNode *node) {
     if (node->children.size() && node->children.front()->nodeName == "compound_statement") {
         CFGNode *tmp = getCFGNodeByTreeNode(node->children[0]->children.front(), cfg);
@@ -1031,19 +969,19 @@ static void keepState(TreeNode *node) {
         tmp->keep = true;
     }
     else {
-        // 普通单句直接保存
+        // Direct saving of ordinary single sentence
         CFGNode *tmp = getCFGNodeByTreeNode(node, cfg);
         tmp->keep = true;
     }
 }
 
-// 语法完整性 保存策略，为了防止语法出错
+// Syntax integrity preservation strategy to prevent syntax errors
 static void keepGrammar(CFGNode *node){
     if (node->type == CFGNode::SELECTION) {
         if (node->tree_node->children[0]->children.size() == 5) {
             keepState(node->tree_node->children[0]->children[4]);
         }
-        else { // 7个，if-else型
+        else { // seven，if-else
             keepState(node->tree_node->children[0]->children[4]);
             keepState(node->tree_node->children[0]->children[6]);
         }
@@ -1057,31 +995,31 @@ static void keepGrammar(CFGNode *node){
     }
 }
 
-// 找到某个变量在所有线程中的写入点
+// Find the write point of a variable in all threads
 static void findWritePoints(const vector<string> &readVs, vector<CFGNode*>& write_list) {
-    // 遍历每一个变量
+    // all variable
     for (auto v: readVs) {
-        // 检查所有线程
+        // check all threads
         int a=1-1;
         for (auto pthread: cfg.pthreads) {
             const CFGNode *fun_node = pthread->begin;
-            // 检查这个线程的每一个节点
+            // Check each node of this thread
             for (auto node: cfg.nodes)
                 if (node->function != pthread->begin
                     || std::find(node->writeVs.begin(), node->writeVs.end(), v) == node->writeVs.end())
-                    // 如果该结点不属于该线程，或者没有对指定变量进行写操作
+                    // If the node does not belong to the thread or does not write to the specified variable
                     continue;
                 else
                     write_list.emplace_back(node);
         }
-        // 还要检查主线程
+        // check main thread
         for (auto node: cfg.nodes) {
-            // 首先检查是否写入指定变量
+            // First, check whether the specified variable is written
             if (std::find(node->writeVs.begin(), node->writeVs.end(), v) == node->writeVs.end())
-                continue; // 如果没有写入变量
-            // 遍历控制流，检查是否由主函数调用
+                continue; // if not write variable
+            // Traverse the control flow and check whether it is called by the main function
             bool main_control = false;
-            node->vis.clear(); // 标记清空
+            node->vis.clear(); // mark clear
             queue<CFGNode*> q;
             q.push(node);node->vis.insert(node);
             while (!q.empty()){
@@ -1095,7 +1033,7 @@ static void findWritePoints(const vector<string> &readVs, vector<CFGNode*>& writ
                 q.pop();
             }
             if (!main_control)
-                continue; // 不由主进程控制
+                continue; // main control
             write_list.emplace_back(node);
         }
     }
@@ -1104,18 +1042,18 @@ static void findWritePoints(const vector<string> &readVs, vector<CFGNode*>& writ
 void sliceByCFGNode(CFG &cfg_, CFGNode *node) {
     node->keep = true;
     /**
-     * 1、宽搜，对目标节点查找其线程依赖, 数据依赖和程序依赖，以此类推回去
+     * 1、Wide search, find the thread dependency, data dependency and program dependency of the target node, and so on
      */
     queue<CFGNode *> q;
     q.push(node);
     while (!q.empty()) {
-        // 数据依赖
+        // data dependence
         for (auto dep: q.front()->dataDependence)
             if (!dep->keep){
                 dep->keep = true;
                 q.push(dep);
             }
-        // 控制依赖
+        // control dependence
         for (auto dep: q.front()->controlDependOn) {
             if ( !dep->keep) {
                 dep->keep = true;
@@ -1123,8 +1061,8 @@ void sliceByCFGNode(CFG &cfg_, CFGNode *node) {
             }
         }
 
-        // 线程依赖
-        /**遍历查找每一个线程，涉及写的位置进行搜索
+        // thread dependence
+        /**Traversal to find each thread, involving the location of the write to search
          */
         vector<CFGNode *> write_list;
         findWritePoints(q.front()->readVs, write_list);
@@ -1142,20 +1080,12 @@ void sliceByCFGNode(CFG &cfg_, CFGNode *node) {
 }
 
 void slice(CFG &cfg_) {
-    /**
-     * 1、遍历每一个块，检查是否出现过关键字，出现则对其作切片
-     * 2、检查if、while，保留其下属第一级语句(函数需要保留其compound左右大括号)
-     * 3、全局变量全部保存
-     * 4、线程的相关代码全部保留：声明、create、join、mutex
-     * 5、main函数保存
-     * 6、原子性执行全部保留
-     */
     const std::vector<string> import_id ={
             "assume_abort_if_not",
             "reach_error",
             "abort"
     };
-    // 对于每一个节点，检查其sentence中是否存在上述关键字，存在的话，需要对其做切片
+    // For each node, check whether the above keywords exist in its sense. If so, slice it
     for (auto node: cfg_.nodes) {
         bool check = false;
         for (const auto& key_word: import_id)
@@ -1163,7 +1093,7 @@ void slice(CFG &cfg_) {
                 check = true;
                 break;
             }
-        // 该语句中不存在关键字，那么直接跳过，不需要对其作切片
+        // If there is no keyword in the statement, skip it directly without slicing it
         if (!check)
             continue;
 
@@ -1171,21 +1101,21 @@ void slice(CFG &cfg_) {
         sliceByCFGNode(cfg_, node);
     }
 
-    // 2 检查 if while
+    // 2 check if while
     for (auto node_iw: cfg_.nodes)
         if ((node_iw->type == CFGNode::SELECTION && node_iw->keep)
             || (node_iw->type == CFGNode::ITERATION && node_iw->keep)
             || node_iw->type == CFGNode::FUNCTION)
             keepGrammar(node_iw);
 
-    // 3 全局变量全部保存
+    // 3 Save all global variables
     for (auto node: cfg_.nodes) {
         if (node->type == CFGNode::DECLARATION && node->tree_node->parent->nodeName == "external_declaration") {
             node->keep = true;
         }
     }
 
-    // 4.1 保留线程相关的代码   声明、create、join
+    // 4.1 Retain thread related code   declaration、create、join
     for( auto pthread:cfg_.pthreads)
         if (pthread->begin->keep){
             pthread->decalration->keep = true;
@@ -1195,7 +1125,7 @@ void slice(CFG &cfg_) {
                 pthread->join->keep = true;
         }
 
-    // 4.2 保留线程相关的代码   mutex
+    // 4.2 Retain thread related code   mutex
     for (auto node : cfg_.nodes) {
         if (node->sentence.find("pthread_mutex_lock") != string::npos ||
             node->sentence.find("pthread_mutex_unlock") != string::npos ||
@@ -1207,13 +1137,13 @@ void slice(CFG &cfg_) {
     cfg_.nodes.front()->keep = true;
     cfg_.nodes.front()->next[1]->keep = true;
 
-    // 6 原子性执行全部保留
+    // 6 Atomic execution all reservations
     for (auto node:cfg_.nodes) {
         if (node->type != CFGNode::FUNCTION)
             continue;
         if (node->sentence.find("__VERIFIER_atomic_")== string::npos)
             continue;
-        // 查找所有函数定义语句
+        // Find all function definition statements
         CFGNode *tmp = node;
         while (tmp) {
             tmp->keep = true;

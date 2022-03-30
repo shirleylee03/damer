@@ -3,7 +3,7 @@
 a concurrent program model checking tool based on PDNet.
 
 This project is an automatic tool for building a PDNet model of a concurrent program, and alleviate the state-explosion by PDNet slicing.
-The concurrent program using POSIX threads must satisfy ANSI-C grammar.
+The concurrent program using POSIX threads that must satisfy ANSI-C grammar.
 
 
 ## Environment

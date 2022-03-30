@@ -2,7 +2,7 @@
 // Created on 2022/02/17.
 //
 
-//traditional con slicing
+//traditional cpn slicing
 
 #include "cpn.h"
 

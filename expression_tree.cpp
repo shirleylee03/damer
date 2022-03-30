@@ -10,7 +10,7 @@ using namespace std;
 
 bool judge_logic_operator(string s)
 {
-    if (s == "&&" || s == "||")
+    if (s == "&&" || s == "||") // "and" "or"
         return true;
     return false;
 }

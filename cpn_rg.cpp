@@ -6,7 +6,7 @@
 
 //extern CPN *cpnet;
 extern string arr_suffix ,begin_suffix,end_suffix ,return_suffix ,call_suffix,tid_str,init_tid;
-
+// rg
 
 void Marking::init_marking(CPlace *place,NUM_t pc) {
     placecount = pc;

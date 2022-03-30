@@ -33,9 +33,9 @@ std::map<std::string,optcount_t> opt_table = {
         {"-PDNetSlice",0},
         {"-ProgramSlice",0},
         {"-TraditionalSlice",0},
-        {"-NoDependence",0},
-        {"-property",1},
-        {"-CIA",0}
+        {"-NoDependence",0}, //traditional CPN model
+        {"-property",1}, //the verified properties
+        {"-CIA",0}//
 //        {"-ltlv",0},
 //        {"-noout",0},
 //        {"-directbuild",0},

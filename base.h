@@ -31,7 +31,7 @@ bool exist_in(vector<T> &vec,T element)
 
 
 template<class T>
-T operate(T s1,T s2,string Operator) {
+T operate(T s1,T s2,string Operator) {//operation
     T v1, v2;
     v1 = s1;
     v2 = s2;

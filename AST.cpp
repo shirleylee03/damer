@@ -237,7 +237,7 @@ bool judge_jump_statement(gtree *statement1)
 
 bool judge_statement(gtree *p)
 {
-    //
+    //judge the type of statements
     if(judge_compound_statement(p)
        ||judge_select_statement(p)
        ||judge_iteration_statement(p)

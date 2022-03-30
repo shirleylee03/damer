@@ -19,33 +19,33 @@ void GraphMaker::printTree(TreeNode *r_) {
     FILE *f= fopen(dot_name.c_str(),"wb");
     fprintf(f, "digraph G{\n");
 
-    /* 初始化深搜条件 */
-    int cnt = 0; // 计数器
+    /* Initial */
+    int cnt = 0; // counter
     queue<pair<TreeNode*, int>> q;
     q.push(pair<TreeNode*, int>(r_, cnt));
     fprintf(f, "\tnode%d[label=\"%s\"]\n", cnt++, r_->nodeName.c_str());
-    /* 开始深搜 */
+    /* start */
     while (!q.empty()){
 //        TreeNode *tmp = stk.top().first;
 //        int num = stk.top().second;
-        // 该结点的子节点，只需考虑各自的子节点即可
+        // The child nodes of this node only need to consider their own child nodes
         for (auto child:q.front().first->children){
-            // 构建并连接
+            // construct and link
             fprintf(f, "\tnode%d[label=\"%s\"]\n", cnt, child->nodeName.c_str());
             fprintf(f, "\tnode%d->node%d\n", q.front().second, cnt);
-            // 入栈
+            // push
             q.push((pair<TreeNode*, int>(child, cnt)));
 
-            cnt++; // 计数器递增
+            cnt++; // Counter increment
         }
 
-        // 处理完毕出栈
+        // pop
         q.pop();
     }
     fprintf(f,"}\n");
     fclose(f);
 
-    // 绘图
+    // graph
     string cmd = "dot -Tjpg ";
     cmd+=dot_name;
     cmd+=" -o ";
@@ -57,7 +57,7 @@ void GraphMaker::printCFG(const CFG &cfg_) {
     this->setFilename("dotCFG.dot", "jpgCFG.jpg");
     this->fileOpen();
     /**
-     * 尝试使用地址作为dot文件的节点下标
+     * Try using the address as the node subscript of the dot file
      */
     for(auto node:cfg_.nodes)
         fprintf(dot, "\tnode%lld[label=\"%s\", shape=%s]\n"
@@ -74,19 +74,19 @@ void GraphMaker::printCFG(const CFG &cfg_) {
     this->dot2jpg();
 }
 
-// 打开文件，并将指针存放在本身私有成员，包含dot文件的外层大括号初始化
+// Open the file and store the pointer in its own private member, including the initialization of the outer brace of the dot file
 void GraphMaker::fileOpen() {
     this->dot = fopen(this->dot_name.c_str(), "wb");
     fprintf(this->dot, "digraph G{\n");
 }
 
-// 设置文件名
+// set filename
 void GraphMaker::setFilename(const char *dot_, const char *jpg_) {
     this->dot_name = dot_;
     this->jpg_name = jpg_;
 }
 
-// 画图，包括dot文件的尾部大括号
+// graph
 void GraphMaker::dot2jpg() {
     fprintf(this->dot, "}\n");
     fclose(this->dot);

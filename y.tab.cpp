@@ -2,6 +2,7 @@
 // Created on 2020/10/10.
 //
 
+
 #define _CRT_NONSTDC_NO_DEPRECATE
 #define _CRT_SECURE_NO_WARNINGS
 /* A Bison parser, made by GNU Bison 2.4.1.  */

@@ -50,7 +50,7 @@ private:
     string id;
 //    SORTNUM_t sortnum;
     vector<string> sortname;
-    vector<MemberInfo> memberInfos;//used for 'struct,union' in program, mapping member name to member size
+    vector<MemberInfo> memberInfos; //used for 'struct,union' in program, mapping member name to member size
     vector<MSI> sortid;
     bool hastid;
     bool hasindex;

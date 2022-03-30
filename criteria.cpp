@@ -18,17 +18,17 @@ extern string extract_tokenValue(TiXmlElement *tokenValueNode);
 void GetLTL(ofstream &out,TiXmlElement *p, vector<string> &P,vector<string> &T)
 {
     string value = p->Value();
-    if (value == "all-paths")
+    if (value == "all-paths") // operation A
     {
         GetLTL(out,p->FirstChildElement(), P,T);
     }
-    else if (value == "globally")
+    else if (value == "globally") // operation G
     {
         out << "G(";
         GetLTL(out,p->FirstChildElement(), P,T);
         out << ")";
     }
-    else if (value == "finally")
+    else if (value == "finally") // operation F
     {
         out << "F(";
         GetLTL(out,p->FirstChildElement(), P,T);

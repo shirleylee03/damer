@@ -654,7 +654,7 @@ void two_phrase_slicing(CPN *cpn, vector<string> place, vector<string> &final_P,
     final_T = T;
 }
 
-//前向切片
+//forward slicing
 void preWardSlicing(CPN *cpn, vector<string> place, vector<string> &final_P, vector<string> &final_T){
     vector<string> P, P_done, T;// , P_read;
     P = place;

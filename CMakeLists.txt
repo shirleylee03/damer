@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 14)
 # set(CMAKE_CXX_COMPILER "/opt/homebrew/Cellar/gcc/11.2.0_1/bin/g++-11")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -pthread -Ofast")
+# Fastest compilation optimization
 
 add_executable(PDNet2_0 main.cpp   v_table.cpp v_table.h y.tab.cpp y.tab.h lex.y.cpp
          expression_tree.cpp expression_tree.h AST.cpp AST.h pre_process.cpp cpn.h cpn.cpp base.cpp base.h MultiSet.h MultiSet.cpp Sort.h cpn_rg.h cpn_rg.cpp slice.cpp

@@ -16,7 +16,7 @@ typedef unsigned short paracount_t;
 
 struct option_t{
 public:
-    optname_t name;
+    optname_t name; //name
     std::vector<optvalue_t> value;
 };
 

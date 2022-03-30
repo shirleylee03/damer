@@ -8,7 +8,7 @@
 #include<string>
 #include<map>
 //#define TokenNum_t unsigned short
-#define CaseFlag "case$"
+#define CaseFlag "case$" // case expression
 #define CaseFlagLength 5
 using namespace std;
 

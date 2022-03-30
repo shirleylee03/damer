@@ -20,8 +20,8 @@ int string_replace(std::string &s1, const std::string &s2, const std::string &s3
 void readGraph(std::string input, std::string output) //transfer .txt to .dot
 {
 
-    const char* in = input.data();
-    const char* ou = output.data();
+    const char* in = input.data();//input
+    const char* ou = output.data();//output
 
     std::ifstream fin;
     fin.open(in, std::ios::in);
