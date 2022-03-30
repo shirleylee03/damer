@@ -4,9 +4,7 @@
 
 #ifndef ENPAC_2021_SET_H
 #define ENPAC_2021_SET_H
-//
-// Created by hecong on 2020/7/30.
-//
+
 #include <set>
 #include <iostream>
 #include <vector>

@@ -59,6 +59,7 @@ TiXmlBase::Entity TiXmlBase::entity[ TiXmlBase::NUM_ENTITY ] =
 //				ef bf be
 //				ef bf bf 
 
+
 const unsigned char TIXML_UTF_LEAD_0 = 0xefU;
 const unsigned char TIXML_UTF_LEAD_1 = 0xbbU;
 const unsigned char TIXML_UTF_LEAD_2 = 0xbfU;

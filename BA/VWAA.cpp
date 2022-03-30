@@ -11,6 +11,7 @@
  * && this->destination <= delta2->destination
  * this implies delta2
  * */
+
 bool VWAA_delta::implies(const VWAA_delta &delta2) const {
     return (SUBSETEQ(delta2.predicates, this->predicates)
            && SUBSETEQ(delta2.destinations, this->destinations));

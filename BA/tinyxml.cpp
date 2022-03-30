@@ -24,6 +24,7 @@ distribution.
 
 #include <ctype.h>
 
+
 #ifdef TIXML_USE_STL
 #include <sstream>
 #include <iostream>

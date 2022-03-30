@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
+
 <property-set xmlns="http://mcc.lip6.fr/">
     <property>
         <id>test</id>
