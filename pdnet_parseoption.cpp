@@ -1027,8 +1027,8 @@ void cmdlinet::doit() {
                      << "S" << "," << "Tm" << "," << "Ts" << "," << "Tc"  << "," << "R" << "," << "Tpro" << endl;
             else
                 oCSVFile << "" << "," << "P" <<"," << "Pv" << "," << "Pc" << "," << "Pf" <<  "," << "T" << ","
-                     << "S" << "," << "Tm" << "," << "Ts" << "," << "Tc"  << "," << "R" << "," << "Tpro" << ","
-                     << "Tdfd" << "," << "Tcfd" << "," << "Ttra" << endl;
+                     << "S" << "," << "Tm" << "," << "Ts" << "," << "Tc"  << "," << "R" << ","
+                     << "Tdfd" << "," << "Tcfd" << "," << "Ttra" << "," << "Tpro" << endl;
         }
         else{
             oCSVFile.open(csvFileName, ios::app);
@@ -1038,19 +1038,19 @@ void cmdlinet::doit() {
             string csvOutputStr = model_checking(filename, property_file, ltltype, fnum, showcpn, showtree, hasHeu, hasPDNetSlice, hasTraditionalSlice, hasNoDependence, rowMap);
             if(hasProgramSlice) {
 //                csvFormatAppend(csvOutputStr, to_string(programSliceTime));
-                csvFormatAppend(csvOutputStr, to_string((ps_3_times[0] + ps_3_times[1] + ps_3_times[2]) / 1000.0));
 //                csvFormatAppend(csvOutputStr, "NULL");
 //                csvFormatAppend(csvOutputStr, "NULL");
                 csvFormatAppend(csvOutputStr, to_string(ps_3_times[0]/1000.0));
                 csvFormatAppend(csvOutputStr, to_string(ps_3_times[1]/1000.0));
                 csvFormatAppend(csvOutputStr, to_string(ps_3_times[2]/1000.0));
+                csvFormatAppend(csvOutputStr, to_string((ps_3_times[0] + ps_3_times[1] + ps_3_times[2]) / 1000.0));
             }
             else{
                 csvFormatAppend(csvOutputStr, "NULL"); //Reserved for Tpro
             }
             oCSVFile << csvOutputStr << endl;
         }
-        else{
+        else{//Change Impact Analysis
             string filename_pre = filename, filename_after = filename.replace(filename.rfind(".c"), 2, "-new.c");
             auto rowMap = preProcessGetRowMap(filename_pre);
             preProcessGetRowMap(filename_after);
