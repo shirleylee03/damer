@@ -131,7 +131,7 @@ $ ./PDNet2_0 ./PDNet2_0 -NoDependence -ProgramSlice -property ../test/dekker.xml
 
 More command can be seen with:
 
-$ ./exe/PDNet2_0 -help
+$ ./PDNet2_0 -help
 
 ## Script
 
@@ -139,5 +139,6 @@ You can set SHELL or PYTHON script in the debug directory (cmake-build-debug) to
 
 We provide two scripts to run the experiments in the manuscript.
 
-$ ./run.sh
+$ sudo ./run.sh
+
 $ python run.py (The premise is that python is already installed in your system)
