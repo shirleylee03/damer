@@ -7,11 +7,11 @@ The concurrent program using POSIX threads that must satisfy ANSI-C grammar.
 
 
 ## Environment
-- Ubuntu or Deepin 
+- Ubuntu or Deepin with Linux Kernel.
 
 ## Installation
 
-Since DAMER uses Graphviz and tcmalloc. 
+Pre installed software: g++,gcc, graphviz and tcmalloc. 
 You should make sure they are installed in system.
 
 ### Install Graphviz.
@@ -22,7 +22,7 @@ $ sudo apt-get install graphviz
 
 ### Install tcmalloc. 
 
-There are two ways to install tcmalloc
+There are two ways to install tcmalloc:
 
 #### 1. Use our script to install tcmalloc automatically.
 
@@ -32,7 +32,7 @@ $ cd tcmalloc \
 $ chmod +x install.sh \
 $ sudo ./install.sh
 
-It will takes a few minutes if everything goes well.
+It will take a few minutes if everything goes well.
 
 #### 2. Use command-lines.
 
