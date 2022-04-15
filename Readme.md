@@ -11,7 +11,7 @@ The concurrent program using POSIX threads that must satisfy ANSI-C grammar.
 
 ## Installation
 
-Pre installed software: g++,gcc, graphviz and tcmalloc. 
+Pre-installed software: g++,gcc, graphviz and tcmalloc. 
 You should make sure they are installed in system.
 
 ### Install Graphviz.
@@ -116,8 +116,15 @@ The relevant use of tcmalloc is removed from the Mac branch.
 - The 'test' folder is where you put the test files.
 - Those *.c files is the original program files.
 
+First, you should switch to the 'build' directory:
 
-To run DAMER, type the following command in 'exe' directory:
+$ cd build
+
+To run DAMER, type the following command in 'build' directory:
+
+$ chmod +x PDNet2_0
+
+$ chmod +x ../exe/ps_3
 
 $ ./PDNet2_0 [-showtree] [-showcpn] (-compare|-directbuild|-slice) ./benchmarks/(filename)
 
@@ -125,9 +132,9 @@ Tips: The contents in parentheses are required
 
 For example:
 
-$ ./PDNet2_0 -compare ../test/dekker.c
-$ ./PDNet2_0 -PDNetSlice ../test/dekker.c
-$ ./PDNet2_0 ./PDNet2_0 -NoDependence -ProgramSlice -property ../test/dekker.xml ../test/dekker.c
+$ ./PDNet2_0 -PDNetSlice ../test/10_Lazy.c
+
+$ ./PDNet2_0 ./PDNet2_0 -NoDependence -ProgramSlice -property ../test/10_Lazy.xml ../test/10_Lazy.c
 
 More command can be seen with:
 
@@ -135,10 +142,15 @@ $ ./PDNet2_0 -help
 
 ## Script
 
-You can set SHELL or PYTHON script in the debug directory (cmake-build-debug) to batch the testing files.
+You can set SHELL script in the debug directory (build) to batch the testing files.
 
-We provide two scripts to run the experiments in the manuscript.
+We provide a scripts to run the experiments in the manuscript and reproduce the experimental results.
+
+$ chmod +x run.sh
 
 $ sudo ./run.sh
 
-$ python run.py (The premise is that python is already installed in your system)
+After execution, DirectBuild.csv, PDNetSlice.csv and ProgramSliceNoDependence.csv  are the original result files in the 'build' directory.
+
+Note: formula-F.xml in the 'benchmark' directory is the safety property for reach benchmark.  The XML files with the same name for each benchmark (i.e., *.xml) are the constraint properties.
+
