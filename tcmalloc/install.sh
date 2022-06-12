@@ -22,3 +22,4 @@ make install #it will be installed /usr/local/lib
 
 echo "/usr/local/lib" > /etc/ld.so.conf 
 ldconfig
+#若报错bash: /etc/ld.so.conf: Permission denied  执行 sudo sh -c "echo '/usr/local/lib' >> /etc/ld.so.conf"

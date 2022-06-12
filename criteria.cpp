@@ -190,7 +190,7 @@ void extract_criteria(int number,LTLCategory type,CPN *cpn,vector<string> &crite
     if (!doc->LoadFile()) {
         cerr << doc->ErrorDesc() << endl;
     }
-    file = "result.txt";
+    file = "result.txt";//这里只是复用file变量
     ofstream out(file.c_str(), ios::out | ios::app);
 
     TiXmlElement *root = doc->RootElement();

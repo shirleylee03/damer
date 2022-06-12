@@ -6936,10 +6936,10 @@ void CPN::change_deleteControlArc(string p_name) {
 
 void CPN::change_addExecutedArc(string src, string tgt, bool sourceP) {
     if(sourceP){
-        Add_Arc(src,tgt,controlflowArcExp(tid_str),sourceP,control,normal);
+        Add_Arc(src,tgt,controlflowArcExp(tid_str),sourceP,control,beoverrided);
     }
     else{
-        Add_Arc(src,tgt,controlflowArcExp(tid_str),sourceP,executed,normal);
+        Add_Arc(src,tgt,controlflowArcExp(tid_str),sourceP,executed,beoverrided);
     }
 }
 

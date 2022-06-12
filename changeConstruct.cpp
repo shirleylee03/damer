@@ -85,7 +85,7 @@ string change_add_single(CPN *cpn,AST_change &change,pair<int,int> add){
         cpn->Add_executed_P(cpn->findP_byid(pre_P)->get_exit(),cpn->findP_byid(add_P)->get_enter());
         cpn->modifyAfterExecuteArc(pre_P,add_P);
     }
-    string same_level_P, control_T;
+    string same_level_P, control_T = "";
     if(add_pos != 0)
         same_level_P = pre_node->matched_P;
     else
@@ -98,7 +98,8 @@ string change_add_single(CPN *cpn,AST_change &change,pair<int,int> add){
             break;
         }
     }
-    cpn->change_addControlArc(control_T,add_P);
+    if(control_T != "")
+        cpn->change_addControlArc(control_T,add_P);
 
     ///change the out transition TODO
 
@@ -123,15 +124,35 @@ string change_del_single(CPN *cpn, AST_change &change, pair<int,int> del){
     while(originFirstStatementNode->type != STATEMENT)
         originFirstStatementNode = originFirstStatementNode->child;
     gtree *del_node = get_statementNodeFromPos(originFirstStatementNode,del_pos - 1);//函数输入的pos以0开始
+    gtree *pre_node = del_node->parent->child;
     auto after_node = del_node->parent->next;
+    string pre_P;
     ///change AST
     if(del_pos == 1){
         ///it is the first node
-
+        pre_node = NULL;
         auto tmp = after_node->parent->child;
         after_node->parent->child = after_node;
         delete tmp;
     }
+    else{
+
+        if(pre_node == del_node){
+            cerr << "The deleted node should not be the only statement within a compound statement!"<<endl;
+            exit(-1);
+        }
+        if(pre_node->type != STATEMENT)
+            pre_node = pre_node->child->next;
+
+//        if(pre_node->type == STATEMENT)
+//            pre_P = pre_node->matched_P;
+//        else
+//            pre_P = pre_node->next->matched_P;
+        pre_node->parent->child->parent = del_node->parent;
+        pre_node->parent = del_node->parent;
+        del_node->parent->child = pre_node->parent->child;
+    }
+
 
     ///change other changes
     for(int j=0;j<change.add.size();j++) {
@@ -161,17 +182,7 @@ string change_del_single(CPN *cpn, AST_change &change, pair<int,int> del){
         cpn->modifyPreExecuteArc(del_P,after_P);
     }
     else{
-        gtree *pre_node = del_node->parent->child;
-        if(pre_node == del_node){
-            cerr << "The deleted node should not be the only statement within a compound statement!"<<endl;
-            exit(-1);
-        }
-        pre_node = pre_node->child;
-        string pre_P;
-        if(pre_node->type == STATEMENT)
-            pre_P = pre_node->matched_P;
-        else
-            pre_P = pre_node->next->matched_P;
+
         cpn->modifyAfterExecuteArc(del_P,pre_P);
     }
 

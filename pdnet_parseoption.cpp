@@ -35,7 +35,7 @@ std::map<std::string,optcount_t> opt_table = {
         {"-TraditionalSlice",0},
         {"-NoDependence",0}, //traditional CPN model
         {"-property",1}, //the verified properties
-        {"-CIA",0}//
+        {"-CIA",0}//change impact analysis
 //        {"-ltlv",0},
 //        {"-noout",0},
 //        {"-directbuild",0},
@@ -472,6 +472,7 @@ string model_checking(string check_file,string property_file, LTLCategory ltltyp
     pre_P_num = cpnet->get_placecount();
     pre_T_num = cpnet->get_transcount();
 //    pre_arc_num = cpnet->get_arccount();
+        // changePropertyToPDNet
         changeProgramXML2PDNetXML(property_file, cpnet, rowMap);
 
         vector<string> final_P, final_T, criteria;
@@ -479,7 +480,7 @@ string model_checking(string check_file,string property_file, LTLCategory ltltyp
         //4.extract criteria from LTL file and generate “.txt” to describe formulas
         extract_criteria(num, ltltype, cpnet, criteria);
 
-        cpnet->InitDistance(criteria);//启发式信息初始化distance
+        cpnet->InitDistance(criteria); //Heuristic information initialization distance
 
         auto place = cpnet->getplacearr();
 
@@ -503,7 +504,7 @@ string model_checking(string check_file,string property_file, LTLCategory ltltyp
                 [](const struct_pri &lhs, const struct_pri &rhs) { return lhs.second < rhs.second; });
             cpnet->setPriTrans(prioritys);
 
-            if (hasHeu)
+            if (hasHeu) //using heuritic
                 cpnet->generate_transPriNum();
         clock_t slice_end = clock();
         final_P.push_back("P0"); //alloc_store_P
@@ -613,7 +614,7 @@ string model_checking(string check_file,string property_file, LTLCategory ltltyp
             csvFormatAppend(csvOutputStr, slice_res);
 
             out << "slice time: " << setiosflags(ios::fixed) << setprecision(3) << slice / base_clock << endl;
-            out << "model_check: " << setiosflags(ios::fixed) << setprecision(3) << slice_check / base_clock << endl;
+            out << "model checking time: " << setiosflags(ios::fixed) << setprecision(3) << slice_check / base_clock << endl;
             out << "total time: " << setiosflags(ios::fixed) << setprecision(3) << slice_time / base_clock << endl;
             out << endl;
             if(NoDependence){
@@ -724,9 +725,30 @@ string model_checking(string check_file,string property_file, LTLCategory ltltyp
     return csvOutputStr;
 }
 
+// change impact analysis (CIA)
 void changeImpactAnalysis(string origin_filename, string new_filename,string property_file, LTLCategory ltltype,int num,bool gen_picture,bool showtree,bool hasHeu,bool hasSlice, RowMap rowMap){
+    double base_clock = 1000.0;
+    switch (ltltype) {//checking type
+        case LTLF:
+//            filename = check_file.substr(0,check_file.length()-2) + "-F.xml";
+//            strcpy(LTLFfile,filename.c_str());
 
-//    strcpy(LTLFfile, string("../properties/formula.xml").c_str());
+            strcpy(LTLFfile, string("../properties/formula.xml").c_str());
+            break;
+        case LTLV:
+//            throw "we don't support LTLV for now!";
+//            filename = check_file.substr(0,check_file.length()-2) + "-V.xml";
+//            strcpy(LTLVfile,filename.c_str());
+            strcpy(LTLVfile, string("../properties/formula.xml").c_str());
+            break;
+        case LTLC:
+            //We can support LTLC ,but it is not meaningful;
+//            filename = check_file.substr(0,check_file.length()-2) + "-C.xml";
+//            strcpy(LTLCfile,filename.c_str());
+
+            strcpy(LTLFfile, string("../properties/formula.xml").c_str());
+            break;
+    }
 
     clock_t begin,end;
     begin = clock();
@@ -735,6 +757,8 @@ void changeImpactAnalysis(string origin_filename, string new_filename,string pro
     string pre_res, slice_res;
 
     // 1. Construct original PDNet
+    clock_t begin_oriM, end_oriM; //end_oriM-begin_oriM the time to construct original model
+    begin_oriM = clock();
     gtree *tree1 = create_tree(origin_filename);
     cut_tree(tree1);
     if (showtree) {
@@ -743,7 +767,8 @@ void changeImpactAnalysis(string origin_filename, string new_filename,string pro
     }
     CPN *originCpnet = new CPN;
 
-    //2.Construct new PDNet
+
+    // 2.Construct new PDNet
 
     originCpnet->initDecl();
     originCpnet->getDecl(tree1);
@@ -757,6 +782,7 @@ void changeImpactAnalysis(string origin_filename, string new_filename,string pro
     originCpnet->set_producer_consumer();
 
 
+
     string filename_prefix;
     if (gen_picture) {
         filename_prefix = "originModel";
@@ -764,7 +790,15 @@ void changeImpactAnalysis(string origin_filename, string new_filename,string pro
         readGraph(filename_prefix + ".txt", filename_prefix + ".dot");
         makeGraph(filename_prefix + ".dot", filename_prefix + ".png");
     }
+    //end_newM = clock();
+    end_oriM = clock();// end construct original model
 
+    /* ************************************* */
+
+    clock_t begin_newM, end_newM; //end_newM-begin_newM the time to construct new model
+    begin_newM = clock();
+    clock_t begin_chaDet, end_chaDet; // end_chaDet - begin_chaDet the time to change detection
+    begin_chaDet = clock();
     // 2. Construct the new tree
     gtree *tree2 = create_tree(new_filename);
     cut_tree(tree2);
@@ -772,33 +806,60 @@ void changeImpactAnalysis(string origin_filename, string new_filename,string pro
         intofile_tree(tree2);
         makeGraph("newtree.dot", "newtree.png");
     }
+
     //Change Checking Starting
     vector<Mapping> M;
     top_down(tree1, tree2, M);
-    auto M_statement = get_MatchStatement(M);//找到语法树中所有完全match的节点
+
+    // Find all fully matched nodes in the syntax tree
+    auto M_statement = get_MatchStatement(M);
     vector<gtree *> vec_t1,vec_t2;
 //    extract_changeNodes(M_statement,M,vec_t1,vec_t2);
-    vector<AST_change> changes = extract_change(tree1, tree2, M, M_statement);//从语法树中提取变化的节点
 
-    vector<string> criteria_change,final_P,final_T;
-    criteria_change = changeConstruct(originCpnet,changes);//进行模型修改
-    preWardSlicing(originCpnet,criteria_change,final_P,final_T);//前向切片找变化影响的部分
+    // Extract changing nodes from the syntax tree
+    vector<AST_change> changes = extract_change(tree1, tree2, M, M_statement);
+    end_chaDet = clock(); //end change detection
+
+    vector<string> criteria_change,final_P,final_T; //change criterion
+    clock_t begin_mod, end_mod;
+    begin_mod = clock();
+    //model modified
+    criteria_change = changeConstruct(originCpnet,changes);
+    end_mod = clock(); //end construct modified model
+    end_newM = clock(); //end construct new model
+
+    clock_t begin_reuse, end_reuse;
+    begin_reuse = clock();
+    //forward slicing find change impact submodel final_P
+    preWardSlicing(originCpnet,criteria_change,final_P,final_T);
     vector<string> criteria_prop,final_P1,final_T1;
     changeProgramXML2PDNetXML(property_file, originCpnet, rowMap);
     //4.extract criteria from LTL file and generate “.txt” to describe formulas
     extract_criteria(num, ltltype, originCpnet, criteria_prop);
-    two_phrase_slicing(originCpnet,criteria_prop,final_P1,final_T1);//后向切片找影响性质的部分
 
-    auto res = getCommon(final_P,final_P1);//二者做交集判断是否可以复用结果
+    //backward slicing find impact property submodel final_P1
+    two_phrase_slicing(originCpnet,criteria_prop,final_P1,final_T1);
+
+    //reuse checking by intersection
+    auto res = getCommon(final_P,final_P1); //output whether the intersection is empty
     if(res.size() == 0){
-        cout << "Reuse the old results"<<endl;
+        cout << "Reuse the old results!"<<endl;
         end = clock();
-        cout << "time: " << (end-begin)/1000 << "ms"<<endl;
+        end_reuse = clock();
+        cout << "total time: " << (end-begin) / base_clock << "ms"<<endl;
+        cout << "time to construct original model: " << (end_oriM - begin_oriM) / base_clock << "ms"<< endl;
+        cout << "time to construct new model: " << (end_newM - begin_newM) / base_clock << "ms"<< endl;
+        cout << "   time to detect change: " << (end_chaDet - begin_chaDet) / base_clock << "ms"<< endl;
+        cout << "   time to modify the original model: " << (end_mod - begin_mod)/ base_clock << "ms" << endl;
+        cout << "time to reuse judgement: " << (end_reuse - begin_reuse) / base_clock << "ms"<< endl;
         exit(10);
     }
-
+    end_reuse = clock();
     cout << "CIA failed！Model checking again..." <<endl;
 
+
+    clock_t begin_repMC, end_repMC;// end_repMC-begin_repMC the time repeated model checking
+    begin_repMC = clock();
     //Model checking again...
     originCpnet->InitDistance(criteria_prop); //Init distance Heuristic
 
@@ -830,12 +891,11 @@ void changeImpactAnalysis(string origin_filename, string new_filename,string pro
         makeGraph(filename_prefix + ".dot", filename_prefix + ".png");
     }
 
-    if(!hasSlice) {
-        //Directly Model checking
+    if(!hasSlice) { //Directly Model checking
 //    RG rg;
 //    rg.init(originCpnet);
 //    rg.GENERATE(originCpnet);
-        cout << "original PDNet:\n";
+        cout << "The original PDNet:\n";
 //    out<<"  placenum: "<<cpnet->placecount<<endl;
         cout << "  placenum: " << originCpnet->get_placecount() << endl;
         cout << "  varplacenum: " << originCpnet->get_varplacecount() << endl;
@@ -845,9 +905,9 @@ void changeImpactAnalysis(string origin_filename, string new_filename,string pro
         cout << "  transnum: " << originCpnet->get_transcount() << endl;
 //    cout<<"  arcnum:"<<cpnet->get_arccount()<<endl;
         CHECKLTL(originCpnet, ltltype, num, pre_rgnode_num, pre_res);
+        end_repMC = clock();
     }
-    else{
-        //Use PDNet Slice
+    else{//Use PDNet Slice
         CPN *cpnet_slice = new CPN;
 
         cpnet_slice->copy_childNet(originCpnet, final_P, final_T);
@@ -882,10 +942,18 @@ void changeImpactAnalysis(string origin_filename, string new_filename,string pro
 
         //7.verify sliced CPN's property
         CHECKLTL(cpnet_slice, ltltype, num, slice_rgnode_num, slice_res);
-
+        end_repMC = clock();
     }
     end = clock();
-    cout << "time: "<< (end - begin)/1000 << "ms" <<endl;
+    // The time for replaying slicing model checking
+    cout << "total time: "<< (end - begin) / base_clock << "ms" <<endl;
+    cout << "time to construct original model: " << (end_oriM - begin_oriM) / base_clock << "ms"<< endl;
+    cout << "time to construct new model: " << (end_newM - begin_newM) / base_clock << "ms"<< endl;
+    cout << "   time to detect change: " << (end_chaDet - begin_chaDet) / base_clock << "ms"<< endl;
+    cout << "   time to modify the original model: " << (end_mod - begin_mod)/ base_clock << "ms" << endl;
+    cout << "time to reuse judgement: " << (end_reuse - begin_reuse) / base_clock << "ms"<< endl;
+
+    cout << "time to replay model checking" << (end_repMC - begin_repMC) / base_clock << endl;
 
 }
 
@@ -1051,7 +1119,8 @@ void cmdlinet::doit() {
             oCSVFile << csvOutputStr << endl;
         }
         else{//Change Impact Analysis
-            string filename_pre = filename, filename_after = filename.replace(filename.rfind(".c"), 2, "-new.c");
+            string filename_pre = filename, filename_after = filename.replace(filename.rfind(".iii"), 4, "-new.c");
+            filename_pre = filename_pre.replace(filename_pre.rfind(".iii"), 4, ".c");
             auto rowMap = preProcessGetRowMap(filename_pre);
             preProcessGetRowMap(filename_after);
             filename_pre = filename_pre.replace(filename_pre.rfind(".c"), 2, ".iii");
@@ -1109,7 +1178,7 @@ option_t cmdlinet::get_option(std::string name) {
         if(options[i].name == name)
             return options[i];
 
-    std::cerr<<"Error in get_option, the option doesn't exist!"<<std::endl;
+    std::cerr<<"Error in get_option, the option doesn't exist!" << std::endl;
     exit(-1);
 }
 
